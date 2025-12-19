@@ -1,0 +1,19 @@
+datasets:
+  - name: hawkes_local
+    dataset_id: hawkes_local
+    baseline_config: examples/configs/fim_hawkes.yaml
+    baseline_dataset_id: hawkes_local
+    fim_train_experiment_id: FIM_train
+    fim_eval_experiment_id: FIM_eval
+    fim_label: FIM-Hawkes (EasyTPP)
+
+fim:
+  label: FIM-Hawkes (EasyTPP)
+  checkpoint_path: /cephfs/users/berghaus/FoundationModels/FIM/results/.ICLR_submission_model/checkpoints/best-model
+  config: examples/configs/fim_hawkes.yaml
+  train_experiment_id: FIM_train
+  eval_experiment_id: FIM_eval
+  model_specs:
+    fim_num_integration_points: 5000
+
+

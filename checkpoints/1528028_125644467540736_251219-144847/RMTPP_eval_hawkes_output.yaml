@@ -1,0 +1,60 @@
+data_config:
+  train_dir: tests/synthetic_data.json
+  valid_dir: tests/synthetic_data.json
+  test_dir: tests/synthetic_data.json
+  data_format: json
+  data_specs:
+    num_event_types: 3
+    pad_token_id: 3
+    padding_side: right
+    truncation_side: right
+    padding_strategy: null
+    truncation_strategy: null
+    max_len: null
+    fim_context_size: 16
+    fim_inference_size: 16
+    fim_max_num_events: 40
+    fim_sampling_strategy: sequential
+    fim_episodes_per_epoch: 20
+base_config:
+  stage: eval
+  backend: torch
+  dataset_id: hawkes_local
+  runner_id: std_tpp
+  model_id: RMTPP
+  base_dir: ./checkpoints/
+  specs:
+    log_folder: ./checkpoints/1528028_125644467540736_251219-144847
+    saved_model_dir: ./checkpoints/1528028_125644467540736_251219-144847/models/saved_model
+    saved_log_dir: ./checkpoints/1528028_125644467540736_251219-144847/log
+    output_config_dir: ./checkpoints/1528028_125644467540736_251219-144847/RMTPP_eval_hawkes_output.yaml
+model_config:
+  rnn_type: LSTM
+  hidden_size: 32
+  time_emb_size: 16
+  num_layers: 2
+  sharing_param_layer: false
+  loss_integral_num_sample_per_step: 20
+  dropout_rate: 0.0
+  use_ln: false
+  thinning: null
+  num_event_types_pad: 4
+  num_event_types: 3
+  event_pad_index: 3
+  model_id: RMTPP
+  pretrained_model_dir: null
+  gpu: 0
+  model_specs: {}
+trainer_config:
+  seed: 42
+  gpu: 0
+  batch_size: 32
+  max_epoch: 1
+  shuffle: false
+  optimizer: adam
+  learning_rate: 0.001
+  valid_freq: 1
+  use_tfb: false
+  metrics:
+  - acc
+  - rmse

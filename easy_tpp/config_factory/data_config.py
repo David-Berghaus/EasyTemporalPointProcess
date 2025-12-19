@@ -14,6 +14,12 @@ class DataSpecConfig(Config):
         self.truncation_strategy = kwargs.get('truncation_strategy')
         self.num_event_types_pad = self.num_event_types + 1
         self.model_input_names = kwargs.get('model_input_names')
+        # Optional parameters for FIM episodic loading
+        self.fim_context_size = kwargs.get('fim_context_size')
+        self.fim_inference_size = kwargs.get('fim_inference_size')
+        self.fim_max_num_events = kwargs.get('fim_max_num_events', kwargs.get('max_num_events'))
+        self.fim_sampling_strategy = kwargs.get('fim_sampling_strategy')
+        self.fim_episodes_per_epoch = kwargs.get('fim_episodes_per_epoch')
 
         if self.padding_side is not None and self.padding_side not in ["right", "left"]:
             raise ValueError(
@@ -37,8 +43,13 @@ class DataSpecConfig(Config):
             'padding_side': self.padding_side,
             'truncation_side': self.truncation_side,
             'padding_strategy': self.padding_strategy,
-            'truncation_strategy': self.truncation_strategy,
-            'max_len': self.max_len
+                'truncation_strategy': self.truncation_strategy,
+                'max_len': self.max_len,
+                'fim_context_size': self.fim_context_size,
+                'fim_inference_size': self.fim_inference_size,
+                'fim_max_num_events': self.fim_max_num_events,
+                'fim_sampling_strategy': self.fim_sampling_strategy,
+                'fim_episodes_per_epoch': self.fim_episodes_per_epoch
         }
 
     @staticmethod
@@ -66,7 +77,12 @@ class DataSpecConfig(Config):
                               truncation_side=self.truncation_side,
                               padding_strategy=self.padding_strategy,
                               truncation_strategy=self.truncation_strategy,
-                              max_len=self.max_len)
+                              max_len=self.max_len,
+                              fim_context_size=self.fim_context_size,
+                              fim_inference_size=self.fim_inference_size,
+                              fim_max_num_events=self.fim_max_num_events,
+                              fim_sampling_strategy=self.fim_sampling_strategy,
+                              fim_episodes_per_epoch=self.fim_episodes_per_epoch)
 
 
 @Config.register('data_config')

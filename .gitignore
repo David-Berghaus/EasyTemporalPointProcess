@@ -27,3 +27,5 @@ log
 examples/checkpoints/*
 
 notebooks/checkpoints/*
+
+.venv/

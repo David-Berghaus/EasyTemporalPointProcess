@@ -1,0 +1,610 @@
+pipeline_config_id: runner_config
+
+data:
+  amazon:
+    data_format: json
+    train_dir: easytpp/amazon
+    valid_dir: easytpp/amazon
+    test_dir: easytpp/amazon
+    data_specs:
+      num_event_types: 16
+      pad_token_id: 16
+      padding_side: right
+      truncation_side: right
+      max_len: 96
+      fim_context_size: 32
+      fim_inference_size: 32
+      fim_max_num_events: 96
+      fim_sampling_strategy: sequential
+      fim_episodes_per_epoch: 30
+
+  taxi:
+    data_format: json
+    train_dir: easytpp/taxi
+    valid_dir: easytpp/taxi
+    test_dir: easytpp/taxi
+    data_specs:
+      num_event_types: 10
+      pad_token_id: 10
+      padding_side: right
+      truncation_side: right
+      max_len: 64
+      fim_context_size: 32
+      fim_inference_size: 32
+      fim_max_num_events: 64
+      fim_sampling_strategy: sequential
+      fim_episodes_per_epoch: 50
+
+  retweet:
+    data_format: json
+    train_dir: easytpp/retweet
+    valid_dir: easytpp/retweet
+    test_dir: easytpp/retweet
+    data_specs:
+      num_event_types: 3
+      pad_token_id: 3
+      padding_side: right
+      truncation_side: right
+      max_len: 256
+      fim_context_size: 128
+      fim_inference_size: 128
+      fim_max_num_events: 256
+      fim_sampling_strategy: sequential
+      fim_episodes_per_epoch: 50
+
+  taobao:
+    data_format: json
+    train_dir: easytpp/taobao
+    valid_dir: easytpp/taobao
+    test_dir: easytpp/taobao
+    data_specs:
+      num_event_types: 17
+      pad_token_id: 17
+      padding_side: right
+      truncation_side: right
+      max_len: 128
+      fim_context_size: 64
+      fim_inference_size: 64
+      fim_max_num_events: 128
+      fim_sampling_strategy: sequential
+      fim_episodes_per_epoch: 50
+
+  stackoverflow:
+    data_format: json
+    train_dir: easytpp/stackoverflow
+    valid_dir: easytpp/stackoverflow
+    test_dir: easytpp/stackoverflow
+    data_specs:
+      num_event_types: 22
+      pad_token_id: 22
+      padding_side: right
+      truncation_side: right
+      max_len: 128
+      fim_context_size: 64
+      fim_inference_size: 64
+      fim_max_num_events: 128
+      fim_sampling_strategy: sequential
+      fim_episodes_per_epoch: 50
+
+# ---------------------------
+# Helpers for model defaults
+# ---------------------------
+_default_trainer: &default_trainer
+  batch_size: 16
+  max_epoch: 30
+  shuffle: False
+  optimizer: adam
+  learning_rate: 1.e-3
+  valid_freq: 1
+  use_tfb: False
+  metrics: ['acc', 'rmse']
+  seed: 42
+  gpu: 0
+
+_nhp_trainer: &nhp_trainer
+  <<: *default_trainer
+
+_thp_trainer: &thp_trainer
+  <<: *default_trainer
+
+_fim_trainer: &fim_trainer
+  <<: *default_trainer
+
+_default_thinning: &thinning_common
+  num_seq: 10
+  num_sample: 1
+  num_exp: 200
+  look_ahead_time: 5
+  patience_counter: 3
+  over_sample_rate: 5
+  num_samples_boundary: 5
+  dtime_max: 5
+  num_step_gen: 1
+
+_nhp_model: &nhp_model
+  hidden_size: 64
+  loss_integral_num_sample_per_step: 20
+  use_ln: False
+  gpu: 0
+  thinning: *thinning_common
+
+_fim_specs: &fim_specs
+  fim_checkpoint_path: /cephfs/users/berghaus/FoundationModels/FIM/results/.ICLR_submission_model/checkpoints/best-model
+  fim_sampling_method: thinning
+  fim_num_integration_points: 5000
+
+_thp_model: &thp_model
+  hidden_size: 32
+  time_emb_size: 16
+  num_layers: 2
+  num_heads: 2
+  mc_num_sample_per_step: 20
+  loss_integral_num_sample_per_step: 20
+  use_ln: False
+  gpu: 0
+  thinning: *thinning_common
+
+_fim_model: &fim_model
+  hidden_size: 32
+  time_emb_size: 16
+  num_layers: 1
+  num_heads: 1
+  loss_integral_num_sample_per_step: 20
+  use_ln: False
+  gpu: 0
+  model_specs:
+    fim_checkpoint_path: /cephfs/users/berghaus/FoundationModels/FIM/results/.ICLR_submission_model/checkpoints/best-model
+    fim_sampling_method: thinning
+    fim_num_integration_points: 5000
+
+# ---------------------------
+# Experiments per dataset
+# ---------------------------
+
+############################
+# AMAZON
+############################
+FIM_train_amazon:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: amazon
+    runner_id: std_tpp
+    model_id: FIMHawkesModel
+    base_dir: ./checkpoints/
+  trainer_config:
+    <<: *fim_trainer
+    batch_size: 2
+  model_config:
+    <<: *fim_model
+    model_specs:
+      <<: *fim_specs
+      fim_context_size: 32
+      fim_inference_size: 32
+      fim_max_num_events: 96
+      fim_episodes_per_epoch: 30
+
+FIM_eval_amazon:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: amazon
+    runner_id: std_tpp
+    model_id: FIMHawkesModel
+    base_dir: ./checkpoints/
+  trainer_config:
+    <<: *fim_trainer
+    batch_size: 2
+  model_config:
+    <<: *fim_model
+    model_specs:
+      <<: *fim_specs
+      fim_context_size: 32
+      fim_inference_size: 32
+      fim_max_num_events: 96
+      fim_episodes_per_epoch: 30
+
+NHP_train_amazon:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: amazon
+    runner_id: std_tpp
+    model_id: NHP
+    base_dir: ./checkpoints/
+  trainer_config:
+    <<: *nhp_trainer
+    batch_size: 8
+  model_config: *nhp_model
+
+NHP_eval_amazon:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: amazon
+    runner_id: std_tpp
+    model_id: NHP
+    base_dir: ./checkpoints/
+  trainer_config:
+    <<: *nhp_trainer
+    batch_size: 8
+  model_config:
+    <<: *nhp_model
+    pretrained_model_dir: ./checkpoints/NHP_amazon_pretrained_placeholder
+
+THP_train_amazon:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: amazon
+    runner_id: std_tpp
+    model_id: THP
+    base_dir: ./checkpoints/
+  trainer_config:
+    <<: *thp_trainer
+    batch_size: 8
+  model_config: *thp_model
+
+THP_eval_amazon:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: amazon
+    runner_id: std_tpp
+    model_id: THP
+    base_dir: ./checkpoints/
+  trainer_config:
+    <<: *thp_trainer
+    batch_size: 8
+  model_config:
+    <<: *thp_model
+    pretrained_model_dir: ./checkpoints/THP_amazon_pretrained_placeholder
+
+############################
+# TAXI
+############################
+FIM_train_taxi:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: taxi
+    runner_id: std_tpp
+    model_id: FIMHawkesModel
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *fim_model
+    model_specs:
+      <<: *fim_specs
+      fim_context_size: 32
+      fim_inference_size: 32
+      fim_max_num_events: 64
+      fim_episodes_per_epoch: 50
+
+FIM_eval_taxi:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: taxi
+    runner_id: std_tpp
+    model_id: FIMHawkesModel
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *fim_model
+    model_specs:
+      <<: *fim_specs
+      fim_context_size: 32
+      fim_inference_size: 32
+      fim_max_num_events: 64
+      fim_episodes_per_epoch: 50
+
+NHP_train_taxi:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: taxi
+    runner_id: std_tpp
+    model_id: NHP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config: *nhp_model
+
+NHP_eval_taxi:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: taxi
+    runner_id: std_tpp
+    model_id: NHP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *nhp_model
+    pretrained_model_dir: ./checkpoints/NHP_taxi_pretrained_placeholder
+
+THP_train_taxi:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: taxi
+    runner_id: std_tpp
+    model_id: THP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config: *thp_model
+
+THP_eval_taxi:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: taxi
+    runner_id: std_tpp
+    model_id: THP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *thp_model
+    pretrained_model_dir: ./checkpoints/THP_taxi_pretrained_placeholder
+
+############################
+# RETWEET
+############################
+FIM_train_retweet:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: retweet
+    runner_id: std_tpp
+    model_id: FIMHawkesModel
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *fim_model
+    model_specs:
+      <<: *fim_specs
+      fim_context_size: 128
+      fim_inference_size: 128
+      fim_max_num_events: 256
+      fim_episodes_per_epoch: 50
+
+FIM_eval_retweet:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: retweet
+    runner_id: std_tpp
+    model_id: FIMHawkesModel
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *fim_model
+    model_specs:
+      <<: *fim_specs
+      fim_context_size: 128
+      fim_inference_size: 128
+      fim_max_num_events: 256
+      fim_episodes_per_epoch: 50
+
+NHP_train_retweet:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: retweet
+    runner_id: std_tpp
+    model_id: NHP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config: *nhp_model
+
+NHP_eval_retweet:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: retweet
+    runner_id: std_tpp
+    model_id: NHP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *nhp_model
+    pretrained_model_dir: ./checkpoints/NHP_retweet_pretrained_placeholder
+
+THP_train_retweet:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: retweet
+    runner_id: std_tpp
+    model_id: THP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config: *thp_model
+
+THP_eval_retweet:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: retweet
+    runner_id: std_tpp
+    model_id: THP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *thp_model
+    pretrained_model_dir: ./checkpoints/THP_retweet_pretrained_placeholder
+
+############################
+# TAOBAO
+############################
+FIM_train_taobao:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: taobao
+    runner_id: std_tpp
+    model_id: FIMHawkesModel
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *fim_model
+    model_specs:
+      <<: *fim_specs
+      fim_context_size: 64
+      fim_inference_size: 64
+      fim_max_num_events: 128
+      fim_episodes_per_epoch: 50
+
+FIM_eval_taobao:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: taobao
+    runner_id: std_tpp
+    model_id: FIMHawkesModel
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *fim_model
+    model_specs:
+      <<: *fim_specs
+      fim_context_size: 64
+      fim_inference_size: 64
+      fim_max_num_events: 128
+      fim_episodes_per_epoch: 50
+
+NHP_train_taobao:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: taobao
+    runner_id: std_tpp
+    model_id: NHP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config: *nhp_model
+
+NHP_eval_taobao:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: taobao
+    runner_id: std_tpp
+    model_id: NHP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *nhp_model
+    pretrained_model_dir: ./checkpoints/NHP_taobao_pretrained_placeholder
+
+THP_train_taobao:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: taobao
+    runner_id: std_tpp
+    model_id: THP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config: *thp_model
+
+THP_eval_taobao:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: taobao
+    runner_id: std_tpp
+    model_id: THP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *thp_model
+    pretrained_model_dir: ./checkpoints/THP_taobao_pretrained_placeholder
+
+############################
+# STACKOVERFLOW
+############################
+FIM_train_stackoverflow:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: stackoverflow
+    runner_id: std_tpp
+    model_id: FIMHawkesModel
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *fim_model
+    model_specs:
+      <<: *fim_specs
+      fim_context_size: 64
+      fim_inference_size: 64
+      fim_max_num_events: 128
+      fim_episodes_per_epoch: 50
+
+FIM_eval_stackoverflow:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: stackoverflow
+    runner_id: std_tpp
+    model_id: FIMHawkesModel
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *fim_model
+    model_specs:
+      <<: *fim_specs
+      fim_context_size: 64
+      fim_inference_size: 64
+      fim_max_num_events: 128
+      fim_episodes_per_epoch: 50
+
+NHP_train_stackoverflow:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: stackoverflow
+    runner_id: std_tpp
+    model_id: NHP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config: *nhp_model
+
+NHP_eval_stackoverflow:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: stackoverflow
+    runner_id: std_tpp
+    model_id: NHP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *nhp_model
+    pretrained_model_dir: ./checkpoints/NHP_stackoverflow_pretrained_placeholder
+
+THP_train_stackoverflow:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: stackoverflow
+    runner_id: std_tpp
+    model_id: THP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config: *thp_model
+
+THP_eval_stackoverflow:
+  base_config:
+    stage: eval
+    backend: torch
+    dataset_id: stackoverflow
+    runner_id: std_tpp
+    model_id: THP
+    base_dir: ./checkpoints/
+  trainer_config: *default_trainer
+  model_config:
+    <<: *thp_model
+    pretrained_model_dir: ./checkpoints/THP_stackoverflow_pretrained_placeholder
+

@@ -1,0 +1,55 @@
+datasets:
+  - name: amazon
+    dataset_id: amazon
+    baseline_config: examples/configs/fim_multi.yaml
+    baseline_dataset_id: amazon
+    model_whitelist: [NHP, THP]
+    fim_train_experiment_id: FIM_train_amazon
+    fim_eval_experiment_id: FIM_eval_amazon
+    fim_modes: [zero_shot, finetune]
+
+  - name: taxi
+    dataset_id: taxi
+    baseline_config: examples/configs/fim_multi.yaml
+    baseline_dataset_id: taxi
+    model_whitelist: [NHP, THP]
+    fim_train_experiment_id: FIM_train_taxi
+    fim_eval_experiment_id: FIM_eval_taxi
+    fim_modes: [zero_shot, finetune]
+
+  - name: retweet
+    dataset_id: retweet
+    baseline_config: examples/configs/fim_multi.yaml
+    baseline_dataset_id: retweet
+    model_whitelist: [NHP, THP]
+    fim_train_experiment_id: FIM_train_retweet
+    fim_eval_experiment_id: FIM_eval_retweet
+    fim_modes: [zero_shot, finetune]
+
+  - name: taobao
+    dataset_id: taobao
+    baseline_config: examples/configs/fim_multi.yaml
+    baseline_dataset_id: taobao
+    model_whitelist: [NHP, THP]
+    fim_train_experiment_id: FIM_train_taobao
+    fim_eval_experiment_id: FIM_eval_taobao
+    fim_modes: [zero_shot, finetune]
+
+  - name: stackoverflow
+    dataset_id: stackoverflow
+    baseline_config: examples/configs/fim_multi.yaml
+    baseline_dataset_id: stackoverflow
+    model_whitelist: [NHP, THP]
+    fim_train_experiment_id: FIM_train_stackoverflow
+    fim_eval_experiment_id: FIM_eval_stackoverflow
+    fim_modes: [zero_shot, finetune]
+
+fim:
+  label: FIM-Hawkes (EasyTPP)
+  checkpoint_path: /cephfs/users/berghaus/FoundationModels/FIM/results/.ICLR_submission_model/checkpoints/best-model
+  config: examples/configs/fim_multi.yaml
+  train_experiment_id: FIM_train_amazon   # fallback if not provided per dataset
+  eval_experiment_id: FIM_eval_amazon     # fallback if not provided per dataset
+  model_specs:
+    fim_num_integration_points: 5000
+

@@ -1,0 +1,67 @@
+data_config:
+  train_dir: easytpp/amazon
+  valid_dir: easytpp/amazon
+  test_dir: easytpp/amazon
+  data_format: json
+  data_specs:
+    num_event_types: 16
+    pad_token_id: 16
+    padding_side: right
+    truncation_side: right
+    padding_strategy: null
+    truncation_strategy: null
+    max_len: 96
+    fim_context_size: 32
+    fim_inference_size: 32
+    fim_max_num_events: 96
+    fim_sampling_strategy: sequential
+    fim_episodes_per_epoch: 30
+base_config:
+  stage: train
+  backend: torch
+  dataset_id: amazon
+  runner_id: std_tpp
+  model_id: FIMHawkesModel
+  base_dir: ./checkpoints/
+  specs:
+    log_folder: ./checkpoints/1633611_133954518397696_251219-155024
+    saved_model_dir: ./checkpoints/1633611_133954518397696_251219-155024/models/saved_model
+    saved_log_dir: ./checkpoints/1633611_133954518397696_251219-155024/log
+    output_config_dir: ./checkpoints/1633611_133954518397696_251219-155024/FIM_train_amazon_output.yaml
+model_config:
+  rnn_type: LSTM
+  hidden_size: 32
+  time_emb_size: 16
+  num_layers: 1
+  sharing_param_layer: false
+  loss_integral_num_sample_per_step: 20
+  dropout_rate: 0.0
+  use_ln: false
+  thinning: null
+  num_event_types_pad: 17
+  num_event_types: 16
+  event_pad_index: 16
+  model_id: FIMHawkesModel
+  pretrained_model_dir: null
+  gpu: 0
+  model_specs:
+    fim_checkpoint_path: /cephfs/users/berghaus/FoundationModels/FIM/results/.ICLR_submission_model/checkpoints/best-model
+    fim_sampling_method: thinning
+    fim_num_integration_points: 5000
+    fim_context_size: 32
+    fim_inference_size: 32
+    fim_max_num_events: 96
+    fim_episodes_per_epoch: 30
+trainer_config:
+  seed: 42
+  gpu: 0
+  batch_size: 8
+  max_epoch: 3
+  shuffle: false
+  optimizer: adam
+  learning_rate: 0.001
+  valid_freq: 1
+  use_tfb: false
+  metrics:
+  - acc
+  - rmse

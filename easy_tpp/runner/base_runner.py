@@ -1,7 +1,7 @@
 import logging
 from abc import abstractmethod
 
-from easy_tpp.preprocess import TPPDataLoader
+from easy_tpp.preprocess import TPPDataLoader, FIMEpisodeDataLoader
 from easy_tpp.utils import Registrable, Timer, logger, get_unique_id, LogConst, get_stage, RunnerPhase
 
 
@@ -33,11 +33,19 @@ class Runner(Registrable):
             data_config = self.runner_config.data_config
             backend = self.runner_config.base_config.backend
             kwargs = self.runner_config.trainer_config.get_yaml_config()
-            self._data_loader = TPPDataLoader(
-                data_config=data_config,
-                backend=backend,
-                **kwargs
-            )
+            if self.runner_config.base_config.model_id == 'FIMHawkesModel':
+                model_specs = getattr(self.runner_config.model_config, 'model_specs', {}) or {}
+                self._data_loader = FIMEpisodeDataLoader(
+                    data_config=data_config,
+                    model_specs=model_specs,
+                    **kwargs
+                )
+            else:
+                self._data_loader = TPPDataLoader(
+                    data_config=data_config,
+                    backend=backend,
+                    **kwargs
+                )
 
         # Needed for Intensity Free model
         mean_log_inter_time, std_log_inter_time, min_dt, max_dt = (

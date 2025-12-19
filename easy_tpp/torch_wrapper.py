@@ -102,7 +102,9 @@ class TorchModelWrapper:
             for prediction we return prediction.
         """
 
-        batch = batch.to(self.device).values()
+        custom_batch = getattr(self.model, "CUSTOM_BATCH_FORMAT", False)
+        batch_obj = batch.to(self.device)
+        batch = batch_obj if custom_batch else batch_obj.values()
         if phase in (RunnerPhase.TRAIN, RunnerPhase.VALIDATE):
             # set mode to train
             is_training = (phase == RunnerPhase.TRAIN)
@@ -123,9 +125,18 @@ class TorchModelWrapper:
                 (loss / num_event).backward()
                 self.opt.step()
             else:  # by default we do not do evaluation on train set which may take a long time
-                if self.model.event_sampler:
-                    self.model.eval()
-                    with torch.no_grad():
+                self.model.eval()
+                with torch.no_grad():
+                    if custom_batch:
+                        pred_dtime, pred_type, label_dtime, label_type, mask = (
+                            self.model.predict_one_step_at_every_event(batch=batch)
+                        )
+                        label_dtime = label_dtime.detach().cpu().numpy()
+                        label_type = label_type.detach().cpu().numpy()
+                        mask = mask.detach().cpu().numpy()
+                        pred_dtime = pred_dtime.detach().cpu().numpy()
+                        pred_type = pred_type.detach().cpu().numpy()
+                    elif self.model.event_sampler:
                         if batch[1] is not None and batch[2] is not None:
                             label_dtime, label_type = batch[1][:, 1:].cpu().numpy(), batch[2][:, 1:].cpu().numpy()
                         if batch[3] is not None:
@@ -135,6 +146,15 @@ class TorchModelWrapper:
                         pred_type = pred_type.detach().cpu().numpy()
             return loss.item(), num_event, (pred_dtime, pred_type), (label_dtime, label_type), (mask,)
         else:
+            if custom_batch:
+                pred_dtime, pred_type, label_dtime, label_type = self.model.predict_multi_step_since_last_event(
+                    batch=batch
+                )
+                pred_dtime = pred_dtime.detach().cpu().numpy()
+                pred_type = pred_type.detach().cpu().numpy()
+                label_dtime = label_dtime.detach().cpu().numpy()
+                label_type = label_type.detach().cpu().numpy()
+                return (pred_dtime, pred_type), (label_dtime, label_type)
             pred_dtime, pred_type, label_dtime, label_type = self.model.predict_multi_step_since_last_event(batch=batch)
             pred_dtime = pred_dtime.detach().cpu().numpy()
             pred_type = pred_type.detach().cpu().numpy()
